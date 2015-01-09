@@ -51,4 +51,8 @@
         <f:checkbox/>
         <label class="attach-previous">${%Sort Z to A}</label>
     </f:entry>
+    <f:entry field="allowNoTag">
+        <f:checkbox name="allowNoTag" checked="${instance.allowNoTag}"/>
+        <label class="attach-previous">${%Allow no tag selection}</label>
+    </f:entry>
 </j:jelly>

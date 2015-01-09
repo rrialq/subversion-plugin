@@ -91,10 +91,14 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
   private final boolean reverseByName;
   private final String defaultValue;
   private final String maxTags;
+  private final boolean allowNoTag;
+
   private static final String SVN_BRANCHES = "branches";
   private static final String SVN_TAGS = "tags";
   private static final String SVN_TRUNK = "trunk";
   
+  public static final String EMPTY_SVN_VALUE = "---";
+
   @Deprecated
   public ListSubversionTagsParameterDefinition(String name, String tagsDir, String tagsFilter, String defaultValue, String maxTags, boolean reverseByDate, boolean reverseByName, String uuid) {
     this(name, tagsDir, null, tagsFilter, defaultValue, maxTags, reverseByDate, reverseByName);
@@ -105,8 +109,13 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
       this(name, tagsDir, credentialsId, tagsFilter, defaultValue, maxTags, reverseByDate, reverseByName);
   }
 
-  @DataBoundConstructor
+  @Deprecated
   public ListSubversionTagsParameterDefinition(String name, String tagsDir, String credentialsId, String tagsFilter, String defaultValue, String maxTags, boolean reverseByDate, boolean reverseByName) {
+    this(name, tagsDir, credentialsId, tagsFilter, defaultValue, maxTags, reverseByDate, reverseByName, false);
+  }
+
+  @DataBoundConstructor
+  public ListSubversionTagsParameterDefinition(String name, String tagsDir, String credentialsId, String tagsFilter, String defaultValue, String maxTags, boolean reverseByDate, boolean reverseByName, boolean allowNoTag) {
     super(name, ResourceBundleHolder.get(ListSubversionTagsParameterDefinition.class).format("TagDescription"));
     this.tagsDir = Util.removeTrailingSlash(tagsDir);
     this.tagsFilter = tagsFilter;
@@ -115,6 +124,7 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
     this.defaultValue = defaultValue;
     this.maxTags = maxTags;
     this.credentialsId = credentialsId;
+    this.allowNoTag = allowNoTag;
   }
 
   // This method is invoked from a GET or POST HTTP request
@@ -206,7 +216,15 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
       dirs = dirs.subList(0, max);
     }    
 
+    if (this.isAllowNoTag()) {
+      dirs.add(EMPTY_SVN_VALUE);
+    }
+
     return dirs;
+  }
+
+  public boolean isAllowNoTag() {
+        return this.allowNoTag;
   }
 
   public String getTagsDir() {
