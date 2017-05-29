@@ -61,7 +61,7 @@ import java.util.logging.Logger;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
 /**
- * Represents the SVN authentication credential given by the user via the &lt;enterCredential> form fragment.
+ * Represents the SVN authentication credential given by the user via the {@code <enterCredential>} form fragment.
  * This is just a value object.
  *
  * @author Kohsuke Kawaguchi
@@ -178,7 +178,7 @@ public class UserProvidedCredential implements Closeable {
         public SVNAuthentication getFirstAuthentication(String kind, String realm, SVNURL url) throws SVNException {
             authenticationAttempted = true;
             if (kind.equals(ISVNAuthenticationManager.USERNAME))
-                // when using svn+ssh, lib.svnkit first asks for ISVNAuthenticationManager.SSH
+                // when using svn+ssh, svnkit first asks for ISVNAuthenticationManager.SSH
                 // authentication to connect via SSH, then calls this method one more time
                 // to get the user name. Perhaps svn takes user name on its own, separate
                 // from OS user name? In any case, we need to return the same user name.

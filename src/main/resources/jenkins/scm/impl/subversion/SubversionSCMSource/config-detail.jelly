@@ -22,6 +22,7 @@
  ~ THE SOFTWARE.
  -->
 
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <f:entry title="${%Project Repository Base}" field="remoteBase">
     <f:textbox/>
@@ -30,9 +31,9 @@
     <f:select/>
   </f:entry>
   <f:entry title="${%Include branches}" field="includes">
-    <f:textbox default="trunk,branches/*,tags/*,sandbox/*"/>
+    <f:textbox default="${descriptor.DEFAULT_INCLUDES}"/>
   </f:entry>
   <f:entry title="${%Exclude branches}" field="excludes">
-    <f:textbox/>
+    <f:textbox default="${descriptor.DEFAULT_EXCLUDES}"/>
   </f:entry>
 </j:jelly>

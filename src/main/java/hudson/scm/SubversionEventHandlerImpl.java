@@ -4,7 +4,7 @@
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution.  The terms
- * are also available at http://lib.svnkit.com/license.html
+ * are also available at http://svnkit.com/license.html
  * If newer versions of this license are posted there, you may use a
  * newer version instead, at your option.
  * ====================================================================
@@ -57,19 +57,19 @@ public class SubversionEventHandlerImpl extends SVNEventAdapter {
 
         {// commit notifications
             if (action == SVNEventAction.COMMIT_ADDED) {
-                out.println("Adding         "+path);
+                out.println("Adding         " + path);
                 return;
             }
             if (action == SVNEventAction.COMMIT_DELETED) {
-                out.println("Deleting       "+path);
+                out.println("Deleting       " + path);
                 return;
             }
             if (action == SVNEventAction.COMMIT_MODIFIED) {
-                out.println("Sending        "+path);
+                out.println("Sending        " + path);
                 return;
             }
             if (action == SVNEventAction.COMMIT_REPLACED) {
-                out.println("Replacing      "+path);
+                out.println("Replacing      " + path);
                 return;
             }
             if (action == SVNEventAction.COMMIT_DELTA_SENT) {
@@ -100,7 +100,7 @@ public class SubversionEventHandlerImpl extends SVNEventAdapter {
                  * from the repository
                  */
                 pathChangeType = "U";
-            }else if (contentsStatus == SVNStatusType.CONFLICTED) {
+            } else if (contentsStatus == SVNStatusType.CONFLICTED) {
                 /*
                  * The file item is in  a  state  of Conflict. That is, changes
                  * received from the repository during an update, overlap  with
@@ -118,6 +118,7 @@ public class SubversionEventHandlerImpl extends SVNEventAdapter {
         } else if (action == SVNEventAction.UPDATE_COMPLETED) {
             // finished updating
             out.println("At revision " + event.getRevision());
+            out.println();
             return;
         } else if (action == SVNEventAction.ADD){
             out.println("A     " + path);

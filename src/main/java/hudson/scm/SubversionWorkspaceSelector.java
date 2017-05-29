@@ -24,7 +24,6 @@
 package hudson.scm;
 
 import hudson.model.Hudson;
-import hudson.remoting.Callable;
 import hudson.remoting.Channel;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.internal.wc.admin.ISVNAdminAreaFactorySelector;
@@ -39,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.security.SlaveToMasterCallable;
 
 /**
  * {@link ISVNAdminAreaFactorySelector} that uses 1.4 compatible workspace for new check out,
@@ -109,7 +109,7 @@ public class SubversionWorkspaceSelector implements ISVNAdminAreaFactorySelector
             Channel c = Channel.current();
             if (c!=null)    // just being defensive. cannot be null.
                 try {
-                    workspaceFormat = c.call(new Callable<Integer, RuntimeException>() {
+                    workspaceFormat = c.call(new SlaveToMasterCallable<Integer, RuntimeException>() {
                         private static final long serialVersionUID = 6494337549896104453L;
 
                         public Integer call()  {
@@ -130,6 +130,12 @@ public class SubversionWorkspaceSelector implements ISVNAdminAreaFactorySelector
      * @deprecated Use {@link org.tmatesoft.svn.core.internal.wc17.db.ISVNWCDb#WC_FORMAT_17}
      */
     public static final int WC_FORMAT_17 = ISVNWCDb.WC_FORMAT_17;
+
+    /**
+     * @deprecated Pre (non-inclusive) 2.5 the working copy format for 1.7 was 100, however
+     * that has been changed to the official {@link ISVNWCDb#WC_FORMAT_17}.
+     */
+    public static final int OLD_WC_FORMAT_17 = 100;
 
     private static final Logger LOGGER = Logger.getLogger(SubversionWorkspaceSelector.class.getName());
 }

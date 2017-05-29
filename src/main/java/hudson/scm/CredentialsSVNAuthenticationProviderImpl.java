@@ -15,6 +15,7 @@ import hudson.model.Item;
 import hudson.remoting.Channel;
 import hudson.security.ACL;
 import hudson.util.Scrambler;
+import hudson.util.Secret;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
@@ -110,10 +111,7 @@ public class CredentialsSVNAuthenticationProviderImpl implements ISVNAuthenticat
             defaultCredentials = CredentialsMatchers
                     .firstOrNull(CredentialsProvider.lookupCredentials(StandardCredentials.class, context,
                             ACL.SYSTEM, URIRequirementBuilder.fromUri(location.remote).build()),
-                            CredentialsMatchers.allOf(idMatcher(location.credentialsId),
-                                    CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(
-                                            StandardCredentials.class), CredentialsMatchers.instanceOf(
-                                            SSHUserPrivateKey.class))));
+                            CredentialsMatchers.allOf(idMatcher(location.credentialsId),MATCHER));
         }
         Map<String, Credentials> additional = new HashMap<String, Credentials>();
         if (scm != null) {
@@ -122,10 +120,7 @@ public class CredentialsSVNAuthenticationProviderImpl implements ISVNAuthenticat
                     StandardCredentials cred = CredentialsMatchers
                             .firstOrNull(CredentialsProvider.lookupCredentials(StandardCredentials.class, context,
                                     ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
-                                    CredentialsMatchers.allOf(idMatcher(c.getCredentialsId()),
-                                            CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(
-                                                    StandardCredentials.class), CredentialsMatchers.instanceOf(
-                                                    SSHUserPrivateKey.class))));
+                                    CredentialsMatchers.allOf(idMatcher(c.getCredentialsId()),MATCHER));
                     if (cred != null) {
                         additional.put(c.getRealm(), cred);
                     }
@@ -377,7 +372,8 @@ public class CredentialsSVNAuthenticationProviderImpl implements ISVNAuthenticat
 
         public SVNUsernamePrivateKeysAuthenticationBuilder(SSHUserPrivateKey c) {
             username = c.getUsername();
-            passphrase = Scrambler.scramble(c.getPassphrase().getPlainText());
+            Secret secret = c.getPassphrase();
+            this.passphrase = secret != null ? Scrambler.scramble(secret.getPlainText()) : null;
             privateKeys = new ArrayList<String>(c.getPrivateKeys());
         }
 
@@ -458,9 +454,10 @@ public class CredentialsSVNAuthenticationProviderImpl implements ISVNAuthenticat
 
         public List<SVNAuthentication> build(String kind, SVNURL url) {
             if (ISVNAuthenticationManager.SSL.equals(kind)) {
-                SVNSSLAuthentication authentication =
-                        new SVNSSLAuthentication(String.valueOf(certificateFile), Scrambler.descramble(password), false, url, false);
-                authentication.setCertificatePath("dummy"); // TODO: remove this JENKINS-19175 workaround
+                SVNSSLAuthentication authentication = SVNSSLAuthentication.newInstance(
+                        certificateFile,
+                        Scrambler.descramble(password).toCharArray(),
+                        false, url, false);
                 return Collections.<SVNAuthentication>singletonList(
                         authentication);
             }
@@ -470,4 +467,10 @@ public class CredentialsSVNAuthenticationProviderImpl implements ISVNAuthenticat
 
     private static final Logger LOGGER = Logger.getLogger(CredentialsSVNAuthenticationProviderImpl.class.getName());
 
+    /**
+     * {@link CredentialsMatcher} that matches either {@link StandardCredentials} or {@link SSHUserPrivateKey}
+     */
+    private static final CredentialsMatcher MATCHER = CredentialsMatchers.anyOf(
+            CredentialsMatchers.instanceOf(StandardCredentials.class),
+            CredentialsMatchers.instanceOf(SSHUserPrivateKey.class));
 }

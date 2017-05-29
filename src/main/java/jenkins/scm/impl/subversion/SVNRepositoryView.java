@@ -25,9 +25,11 @@ package jenkins.scm.impl.subversion;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.scm.*;
 import hudson.util.TimeUnit2;
 import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.tmatesoft.svn.core.ISVNDirEntryHandler;
@@ -42,10 +44,13 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Stephen Connolly
@@ -53,12 +58,13 @@ import java.util.concurrent.ConcurrentMap;
 public class SVNRepositoryView {
     public static final int DIRENTS =
             SVNDirEntry.DIRENT_CREATED_REVISION | SVNDirEntry.DIRENT_KIND | SVNDirEntry.DIRENT_TIME;
+    private static final Logger LOGGER = Logger.getLogger(SVNRepositoryView.class.getName());
     private final DB cache;
     private final SVNRepository repository;
     private final ConcurrentMap<String, NodeEntry> data;
     private final String uuid;
 
-    public SVNRepositoryView(SVNURL repoURL, StandardCredentials credentials) throws SVNException {
+    public SVNRepositoryView(SVNURL repoURL, StandardCredentials credentials) throws SVNException, IOException {
         repository = SVNRepositoryFactory.create(repoURL);
 
         File configDir = SVNWCUtil.getDefaultConfigurationDirectory();
@@ -83,23 +89,43 @@ public class SVNRepositoryView {
         repository.setTunnelProvider(SVNWCUtil.createDefaultOptions(true));
         repository.setAuthenticationManager(sam);
         try {
-            uuid = repository.getRepositoryUUID(false);
-            File cacheFile = new File(new File(Jenkins.getInstance().getRootDir(), "caches"), "svn-" + uuid + ".db");
+            uuid = repository.getRepositoryUUID(true);
+            if (uuid == null) { // TODO is this even possible? Javadoc is unclear.
+                throw new IOException("Could not find UUID for " + repoURL);
+            }
+            Jenkins instance = Jenkins.getInstance();
+            File cacheFile;
+
+            if (instance != null) {
+                cacheFile = new File(new File(instance.getRootDir(), "caches"), "svn-" + uuid + ".db");
+            } else {
+                // This should not happen, however if it does we create a cache file in a temp directory.
+                cacheFile = new File(new File(FileUtils.getTempDirectory(), "caches"), "svn-" + uuid + ".db");
+            }
+
             cacheFile.getParentFile().mkdirs();
             DB cache = null;
+            int count = 0;
             while (cache == null) {
                 try {
                     cache = DBMaker.newFileDB(cacheFile)
                             .cacheWeakRefEnable()
                             .make();
-                } catch (Throwable t) {
+                } catch (Throwable t) { // this library seems to have nonstandard exception handling
                     cacheFile.delete();
+                    LOGGER.log(Level.WARNING, "failing to make/load " + cacheFile, t);
+                    if (++count >= 10) {
+                        throw new IOException("failed to make/load " + cacheFile + ": " + t, t);
+                    }
                 }
             }
             this.cache = cache;
             this.data = this.cache.getHashMap(credentials == null ? "data" : "data-" + credentials.getId());
             cache.commit();
         } catch (SVNException e) {
+            repository.closeSession();
+            throw e;
+        } catch (IOException e) {
             repository.closeSession();
             throw e;
         }
@@ -109,6 +135,7 @@ public class SVNRepositoryView {
         return repository;
     }
 
+    @NonNull
     public String getUuid() {
         return uuid;
     }

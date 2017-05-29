@@ -22,11 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 
-<!--
-  Displays the form to choose the tag name.
-
-  This belongs to a build view.
--->
+<!-- Displays the form to choose the tag name. This belongs to a build view. -->
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <d:taglib uri="local">
     <d:tag name="listTags">
@@ -41,9 +38,9 @@ THE SOFTWARE.
   <j:set var="descriptor" value="${it.descriptor}" />
 
   <l:layout norefresh="true" xmlns:local="local">
-    <st:include it="${it.build}" page="sidepanel.jelly" />
+    <st:include it="${it.run}" page="sidepanel.jelly" />
     <l:main-panel>
-      <h1>${%Build} #${it.build.number}</h1>
+      <h1>${%Build} #${it.run.number}</h1>
 
       <j:set var="tags" value="${it.tags}" />
       <j:if test="${it.isTagged()}">
@@ -67,7 +64,7 @@ THE SOFTWARE.
         </j:choose>
       </j:if>
       
-      <j:if test="${h.hasPermission(it.build,it.permission)}">
+      <j:if test="${h.hasPermission(it.run,it.permission)}">
         <j:if test="${it.isTagged()}">
           <h2>${%Create more tags}</h2>
         </j:if>
@@ -97,7 +94,7 @@ THE SOFTWARE.
               <td colspan="3">
                 ${%Commit comment:}
                 <textarea name="comment" rows="1" class="setting-input"><st:out
-                 value="Tagged from ${it.build}"/></textarea>
+                 value="Tagged from ${it.run}"/></textarea>
                 <div class="textarea-handle"/>
               </td>
             </tr>
