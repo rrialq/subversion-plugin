@@ -71,11 +71,11 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 /**
  * Defines a new {@link ParameterDefinition} to be displayed at the top of the
  * configuration page of {@link Job}s.
- * 
+ *
  * <p>When used, this parameter will request the user to select a Subversion tag
  * at build-time by displaying a drop-down list. See
  * {@link ListSubversionTagsParameterValue}.</p>
- * 
+ *
  * @author Romain Seguy (http://openromain.blogspot.com)
  */
 @SuppressWarnings("rawtypes")
@@ -97,7 +97,7 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
   private static final String SVN_BRANCHES = "branches";
   private static final String SVN_TAGS = "tags";
   private static final String SVN_TRUNK = "trunk";
-  
+
   public static final String EMPTY_SVN_VALUE = "---";
 
   @Deprecated
@@ -133,7 +133,7 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
   public ParameterValue createValue(StaplerRequest req) {
     String[] values = req.getParameterValues(getName());
     if(values == null || values.length != 1) {
-        return this.getDefaultParameterValue(); 
+        return this.getDefaultParameterValue();
     }
     else {
       return new ListSubversionTagsParameterValue(getName(), getTagsDir(), values[0]);
@@ -150,7 +150,7 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
     // still goes on...
     return value;
   }
-  
+
     @Override
     public ParameterValue getDefaultParameterValue() {
         if (StringUtils.isEmpty(this.defaultValue)) {
@@ -191,7 +191,7 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
       SVNRepository repo = SVNRepositoryFactory.create(repoURL);
       repo.setAuthenticationManager(authManager);
       SVNLogClient logClient = new SVNLogClient(authManager, null);
-      
+
       if (isSVNRepositoryProjectRoot(repo)) {
         dirs = this.getSVNRootRepoDirectories(logClient, repoURL);
       } else {
@@ -214,15 +214,15 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
       LOGGER.log(Level.INFO, "No directory entries were found for the following SVN repository: {0}", getTagsDir());
       return Collections.singletonList("!" + ResourceBundleHolder.get(ListSubversionTagsParameterDefinition.class).format("NoDirectoryEntriesFound"));
     }
-    
+
     // Conform list to the maxTags option.
     Integer max = (isInt(this.maxTags) ? Integer.parseInt(this.maxTags) : null);
     if((max != null) && (dirs.size() > max)) {
       dirs = dirs.subList(0, max);
-    }    
+    }
 
     if (this.isAllowNoTag()) {
-      dirs.add(EMPTY_SVN_VALUE);
+      dirs.add( Integer.signum( dirs.size() ), EMPTY_SVN_VALUE );
     }
 
     return dirs;
@@ -251,19 +251,19 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
   public boolean isReverseByName() {
     return reverseByName;
   }
-  
+
   public String getDefaultValue() {
     return defaultValue;
   }
 
   public String getMaxTags() {
     return maxTags;
-  }  
+  }
 
   /**
    * Checks to see if given repository contains a trunk, branches, and tags
    * directories.
-   * 
+   *
    * @param repo Repository to check.
    * @return True if trunk, branches, and tags exist.
    */
@@ -281,7 +281,7 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
   /**
    * Appends the target directory to all entries in a list. I.E. 1.2 -->
    * branches/1.2
-   * 
+   *
    * @param targetDir The target directory to append.
    * @param dirs List of directory entries
    */
@@ -292,7 +292,7 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
       }
     }
   }
-  
+
   private boolean isInt(String value) {
     boolean isInteger = false;
     try {
@@ -302,12 +302,12 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
       isInteger = false;
     }
     return isInteger;
-  }  
+  }
 
   /**
    * Returns a list of contents from the trunk, branches, and tags
    * directories.
-   * 
+   *
    * @param logClient
    * @param repoURL
    * @return List of directories.
@@ -350,8 +350,8 @@ public class ListSubversionTagsParameterDefinition extends ParameterDefinition {
     }
 
     return dirs;
-  }     
-  
+  }
+
   /**
    * Removes the parent directory (that is, the tags directory) from a list of
    * directories.
